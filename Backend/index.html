@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tree View</title>
+  <style>
+    ul {
+      list-style: none;
+    }
+    button {
+      cursor: pointer;
+    }
+    .nested {
+      display: none;
+    }
+    .nested.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tree View</h1>
+  <div id="container"></div>
+  <script>
+    async function fetchData() {
+      try {
+        const response = await fetch("http://localhost:5000/api/fetchData");
+        const db = await response.json();
+        const dataContainer = document.getElementById("container");
+
+        function createTreeView(data, parent) {
+          const ul = document.createElement("ul");
+
+          for (const key in data) {
+            const li = document.createElement("li");
+            const button = document.createElement("button");
+            button.textContent = "+";
+
+            li.textContent = `${key}:`;
+
+            if (typeof data[key] === "object" && data[key] !== null) {
+              button.addEventListener("click", function() {
+                const nestedList = li.querySelector(".nested");
+                if (nestedList) {
+                  nestedList.classList.toggle("active");
+                }
+              });
+              li.appendChild(button);
+
+              const nestedUl = createTreeView(data[key], li);
+              nestedUl.classList.add("nested");
+              li.appendChild(nestedUl);
+            } else {
+              li.textContent += ` ${data[key]}`;
+            }
+
+            ul.appendChild(li);
+          }
+
+          parent.appendChild(ul);
+          return ul;
+        }
+        const treeView = createTreeView(db.scriptResult, dataContainer);
+        dataContainer.appendChild(treeView);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
